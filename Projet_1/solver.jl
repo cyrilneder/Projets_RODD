@@ -19,6 +19,9 @@ function static_solving(inputFile::String)
     S5 = Tuple.(findall(!iszero, prob5))
     S6 = Tuple.(findall(!iszero, prob6))
 
+    println(S1)
+    println(S2)
+
     S = [S1, S2, S3, S4, S5, S6]
 
     m = Model(CPLEX.Optimizer)
@@ -30,16 +33,16 @@ function static_solving(inputFile::String)
     #Contraintes espèces protégées
     @constraint(m, [k in Pd], sum(y[i,j] for (i,j) in S[k]) >= 1)
 
-    @constraint(m, sum(y[i,j]*log(1-proba1[i,j]) for (i,j) in S1) <= log(1-alpha[1]))
-    @constraint(m, sum(y[i,j]*log(1-proba2[i,j]) for (i,j) in S2) <= log(1-alpha[2]))
-    @constraint(m, sum(y[i,j]*log(1-proba3[i,j]) for (i,j) in S3) <= log(1-alpha[3]))
+    @constraint(m, sum(y[i,j]*log(1-prob1[i,j]) for (i,j) in S1) <= log(1-alpha[1]))
+    @constraint(m, sum(y[i,j]*log(1-prob2[i,j]) for (i,j) in S2) <= log(1-alpha[2]))
+    @constraint(m, sum(y[i,j]*log(1-prob3[i,j]) for (i,j) in S3) <= log(1-alpha[3]))
 
     #Contraintes espèces communes
     @constraint(m, [k in Pc], sum(x[i,j] for (i,j) in S[k]) >= 1)
 
-    @constraint(m, sum(x[i,j]*log(1-proba4[i,j]) for (i,j) in S4) <= log(1-alpha[4]))
-    @constraint(m, sum(x[i,j]*log(1-proba5[i,j]) for (i,j) in S5) <= log(1-alpha[5]))
-    @constraint(m, sum(x[i,j]*log(1-proba6[i,j]) for (i,j) in S6) <= log(1-alpha[6]))
+    @constraint(m, sum(x[i,j]*log(1-prob4[i,j]) for (i,j) in S4) <= log(1-alpha[4]))
+    @constraint(m, sum(x[i,j]*log(1-prob5[i,j]) for (i,j) in S5) <= log(1-alpha[5]))
+    @constraint(m, sum(x[i,j]*log(1-prob6[i,j]) for (i,j) in S6) <= log(1-alpha[6]))
 
     #Contraintes zones centrales
     for i in 2:(n-1)
@@ -74,11 +77,9 @@ function static_solving(inputFile::String)
 
     #Affichage de solution
     println("Valeur optimale :", vOpt)
-    println("x = ", vx)
-    println("y = ", vy)
-    plot(heatmap(z=vx))
-    plot(heatmap(z=vy))
-    #plot(heatmap(z=vx+vy))
+    proba_survie1 = 1 - prod([1 - vy[i,j]*prob1[i,j] for i in 1:n, j in 1:n])
+    println("Proba de survie pour k = 1 : ",proba_survie1)
+    plot(heatmap(z=vx+vy, x = 1:p, y = 1:p))
 end
 
 static_solving(path)
