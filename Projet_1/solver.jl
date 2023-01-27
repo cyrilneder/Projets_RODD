@@ -3,26 +3,13 @@ using CPLEX
 using PlotlyJS
 
 path = "data.txt"
-include(path)
 
 function static_solving(inputFile::String)
 
     include(inputFile)
 
-    Pd = 1:q
-    Pc = (q+1):p
-
-    S1 = Tuple.(findall(!iszero, prob1))
-    S2 = Tuple.(findall(!iszero, prob2))
-    S3 = Tuple.(findall(!iszero, prob3))
-    S4 = Tuple.(findall(!iszero, prob4))
-    S5 = Tuple.(findall(!iszero, prob5))
-    S6 = Tuple.(findall(!iszero, prob6))
-
-    println(S1)
-    println(S2)
-
-    S = [S1, S2, S3, S4, S5, S6]
+    println(prob1)
+    println(prob1[6,2])
 
     m = Model(CPLEX.Optimizer)
 
@@ -31,36 +18,47 @@ function static_solving(inputFile::String)
     @variable(m, y[i in 1:n, j in 1:n], Bin)
 
     #Contraintes espèces protégées
-    @constraint(m, [k in Pd], sum(y[i,j] for (i,j) in S[k]) >= 1)
+    #@constraint(m, [k in Pd], sum(y[i,j] for (i,j) in S[k]) >= 1)
 
-    @constraint(m, sum(y[i,j]*log(1-prob1[i,j]) for (i,j) in S1) <= log(1-alpha[1]))
-    @constraint(m, sum(y[i,j]*log(1-prob2[i,j]) for (i,j) in S2) <= log(1-alpha[2]))
-    @constraint(m, sum(y[i,j]*log(1-prob3[i,j]) for (i,j) in S3) <= log(1-alpha[3]))
+    @constraint(m, sum(y[i,j]*log(1-prob1[i,j]) for i in 1:n, j in 1:n) <= log(1-alpha[1]))
+    @constraint(m, sum(y[i,j]*log(1-prob2[i,j]) for i in 1:n, j in 1:n) <= log(1-alpha[2]))
+    @constraint(m, sum(y[i,j]*log(1-prob3[i,j]) for i in 1:n, j in 1:n) <= log(1-alpha[3]))
 
     #Contraintes espèces communes
-    @constraint(m, [k in Pc], sum(x[i,j] for (i,j) in S[k]) >= 1)
+    #@constraint(m, [k in Pc], sum(x[i,j] for (i,j) in S[k]) >= 1)
 
-    @constraint(m, sum(x[i,j]*log(1-prob4[i,j]) for (i,j) in S4) <= log(1-alpha[4]))
-    @constraint(m, sum(x[i,j]*log(1-prob5[i,j]) for (i,j) in S5) <= log(1-alpha[5]))
-    @constraint(m, sum(x[i,j]*log(1-prob6[i,j]) for (i,j) in S6) <= log(1-alpha[6]))
+    @constraint(m, sum(x[i,j]*log(1-prob4[i,j]) for i in 1:n, j in 1:n) <= log(1-alpha[4]))
+    @constraint(m, sum(x[i,j]*log(1-prob5[i,j]) for i in 1:n, j in 1:n) <= log(1-alpha[5]))
+    @constraint(m, sum(x[i,j]*log(1-prob6[i,j]) for i in 1:n, j in 1:n) <= log(1-alpha[6]))
 
     #Contraintes zones centrales
+    
+        # Pas de zones centrales sur les bords
+
+        for i in 1:n
+            @constraint(m, y[1,i] == 0)
+            @constraint(m, y[10,i] == 0)
+            @constraint(m, y[i,1] == 0)
+            @constraint(m, y[i,10] == 0)
+        end
+    
+        # Zones centrales encerclées par zones communes
     for i in 2:(n-1)
         for j in 2:(n-1)
-            @constraint(m, x[i-1,j-1] >= y[i,j])
-            @constraint(m, x[i-1,j] >= y[i,j])
-            @constraint(m, x[i-1,j+1] >= y[i,j])
-            @constraint(m, x[i,j-1] >= y[i,j])
-            @constraint(m, x[i,j] >= y[i,j])
-            @constraint(m, x[i,j+1] >= y[i,j])
-            @constraint(m, x[i+1,j-1] >= y[i,j])
-            @constraint(m, x[i+1,j] >= y[i,j])
-            @constraint(m, x[i+1,j+1] >= y[i,j])
+            @constraint(m, y[i,j] <= x[i-1,j-1])
+            @constraint(m, y[i,j] <= x[i-1,j])
+            @constraint(m, y[i,j] <= x[i-1,j+1])
+            @constraint(m, y[i,j] <= x[i,j-1])
+            @constraint(m, y[i,j] <= x[i,j])
+            @constraint(m, y[i,j] <= x[i,j+1])
+            @constraint(m, y[i,j] <= x[i+1,j-1])
+            @constraint(m, y[i,j] <= x[i+1,j])
+            @constraint(m, y[i,j] <= x[i+1,j+1])
         end
     end
 
     #Objectif
-    @objective(m, Min, sum(c[i,j]*x[i,j] for i in 1:n,j in 1:n))
+    @objective(m, Min, sum(c[i,j]*x[i,j] for i in 1:n, j in 1:n))
 
     #Résolution
     optimize!(m)
@@ -77,9 +75,12 @@ function static_solving(inputFile::String)
 
     #Affichage de solution
     println("Valeur optimale :", vOpt)
-    proba_survie1 = 1 - prod([1 - vy[i,j]*prob1[i,j] for i in 1:n, j in 1:n])
+    proba_survie1 = 1 - prod([1 - vy[i,j]*prob2[i,j] for i in 1:n, j in 1:n])
     println("Proba de survie pour k = 1 : ",proba_survie1)
-    plot(heatmap(z=vx+vy, x = 1:p, y = 1:p))
+    plot(heatmap(z=vx, x = 1:n, y = 1:n))
+    #plot(heatmap(z=prob1, x = 1:p, y = 1:p))
+    #lot(heatmap(z=prob5, x = 1:p, y = 1:p))
+    #plot(heatmap(z=prob6, x = 1:p, y = 1:p))
 end
 
 static_solving(path)
