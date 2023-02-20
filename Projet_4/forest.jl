@@ -4,9 +4,9 @@ using JuMP
 using CPLEX
 using PlotlyJS
 
-include("ExplForet_ampl.txt")
+include("ExplForet30x30.txt")
 
-N, M = size(t)
+M, N = size(t)
 w1 = 1
 w2 = 5
 gL = 3 * 1.26157
@@ -53,7 +53,7 @@ function first_model(max_coupe::Bool=false)
 
     # Contraintes minimum de zones non-coupées
     if max_coupe
-        @constraint(m, sum(x) >= 60)
+        @constraint(m, sum(x) >= 0.6*N*M)
     end
 
     #Objectif
@@ -77,8 +77,9 @@ function first_model(max_coupe::Bool=false)
 
     #Affichage de solution
     println("Valeur optimale :", round(vOpt, digits=1))
-    println("Solution x :")
-    display(vx)
+    println()
+    # println("Solution x :")
+    # display(vx)
     return vx
 end
 
@@ -98,7 +99,7 @@ function second_model(max_coupe::Bool=false)
 
     # Contraintes minimum de zones non-coupées
     if max_coupe
-        @constraint(m, sum(x) >= 60)
+        @constraint(m, sum(x) >= 0.6*N*M)
     end
 
     #Objectif
@@ -124,10 +125,23 @@ function second_model(max_coupe::Bool=false)
 
     #Affichage de solution
     println("Valeur optimale :", round(vOpt, digits=1))
-    println("Solution x :")
-    display(vx)
+    println()
+    # println("Solution x :")
+    # display(vx)
     return vx
 end
 
 # plot(heatmap(z=first_model()[end:-1:1,:]))
-plot(heatmap(z=second_model(true)[end:-1:1,:]))
+# plot(heatmap(z=second_model(true)[end:-1:1,:]))
+
+println("\n First model : \n")
+
+first_model()
+first_model(true)
+
+println("\n Second model : \n")
+
+second_model()
+second_model(true)
+
+println("End")
