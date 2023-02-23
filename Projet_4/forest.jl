@@ -4,7 +4,7 @@ using JuMP
 using CPLEX
 using PlotlyJS
 
-include("ExplForet30x30.txt")
+include("ExplForet50x50.txt")
 
 M, N = size(t)
 w1 = 1
