@@ -69,7 +69,7 @@ function factor_analysis()
     
     generic_model(8,5,2,50,0.001)
     
-    T_min, T_max = 100,1000
+    T_min, T_max = 100,2000
     pas = 100
     
     T_list = T_min:pas:T_max
@@ -80,7 +80,7 @@ function factor_analysis()
     G = 5
     A = 2
     
-    nb_iter = 30
+    nb_iter = 20
     
     avg_time_table = zeros(T_length)
     
