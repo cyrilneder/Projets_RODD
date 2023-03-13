@@ -5,9 +5,10 @@ L_list = 1:T
 nb_iter = 10
 
 avg = zeros(T)
-
+println(size(data))
+println(size(avg))
 for n in 1:nb_iter
-    avg = avg .+ data[n,:]
+    avg .+= data[n,:]
 end
 
 println(avg)

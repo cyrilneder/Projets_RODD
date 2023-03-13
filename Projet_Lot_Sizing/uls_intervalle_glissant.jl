@@ -4,14 +4,14 @@ using CPLEX
 
 function uls_glissant(L, T)
     
-    M = 4
+    M = 6
 
     E_max = 3
     
     d = 20 .+ rand(T)*(70 - 20)
     
-    f = [10,30,60,90]
-    e = [8,6,4,2]
+    f = [10, 30, 60, 75, 90, 105]
+    e = [8, 6, 4, 3, 2, 1]
     
     h_t = 1
     p_t = 0
@@ -40,6 +40,7 @@ function uls_glissant(L, T)
     
     # Désactive les sorties de CPLEX (optionnel)
     set_optimizer_attribute(model, "CPX_PARAM_SCRIND", 0)
+    set_time_limit_sec(model, 90)
     
     #Résolution
     optimize!(model)
@@ -59,13 +60,13 @@ function uls_glissant(L, T)
     end
 end
 
-nb_iter = 100
-T = 12
-L_list = [L for L in 1:T,i in 1:nb_iter]
+# nb_iter = 100
+# T = 12
+# L_list = [L for L in 1:T,i in 1:nb_iter]
 
-println(L_list)
+# println(L_list)
 
-uls_glissant(4,T)
+uls_glissant(4, 12)
 
-truc = uls_glissant.(L_list,T)
-println(truc)
+# truc = uls_glissant.(L_list,T)
+# println(truc)
