@@ -2,13 +2,23 @@ data = [(796.622579580596, 80.07506595094436) (781.9597163251423, 82.35233967814
 
 T = 12
 L_list = 1:T
-nb_iter = 10
+nb_iter = 100
 
-avg = zeros(T)
-println(size(data))
-println(size(avg))
-for n in 1:nb_iter
-    avg .+= data[n,:]
+cost_avg = zeros(T)
+carbone_avg = zeros(T)
+
+for L in L_list
+    cost_avg[L] = 1/nb_iter * sum(data[L,n][1] for  n in 1:nb_iter)
+    carbone_avg[L] = 1/nb_iter * sum(data[L,n][2] for  n in 1:nb_iter)
 end
 
-println(avg)
+println(cost_avg)
+println(carbone_avg)
+
+using Plots; pyplot()
+
+p = plot(L_list, cost_avg)
+#xlims!(p, 3, 20)   
+#ylims!(p, 0.1, 1)
+plot!(p, carbone_avg, axis=Plots.right)
+display(p)
